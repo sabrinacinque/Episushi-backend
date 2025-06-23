@@ -1,40 +1,11 @@
--- ========================================
--- MIGRATION: Aggiungi titolo e prezzo a order_items
--- ========================================
-
--- Verifica se le colonne esistono già prima di aggiungerle
-DO $$ 
-BEGIN
-    -- Aggiungi colonna titolo se non esiste
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
-                   WHERE table_name = 'order_items' AND column_name = 'titolo') THEN
-        ALTER TABLE order_items ADD COLUMN titolo VARCHAR(255);
-    END IF;
-    
-    -- Aggiungi colonna prezzo se non esiste
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
-                   WHERE table_name = 'order_items' AND column_name = 'prezzo') THEN
-        ALTER TABLE order_items ADD COLUMN prezzo DECIMAL(10,2);
-    END IF;
-END $$;
-
--- Popola le colonne con i dati esistenti dal menu (solo se sono NULL)
-UPDATE order_items 
-SET titolo = (SELECT titolo FROM menu WHERE menu.id = order_items.menu_id),
-    prezzo = (SELECT prezzo FROM menu WHERE menu.id = order_items.menu_id)
-WHERE menu_id IS NOT NULL 
-  AND (titolo IS NULL OR prezzo IS NULL);
-
--- Imposta NOT NULL dopo aver popolato i dati
-ALTER TABLE order_items 
-  ALTER COLUMN titolo SET NOT NULL,
-  ALTER COLUMN prezzo SET NOT NULL;
-
-
 -- Insert admin user (password è "admin" con BCrypt)
 INSERT INTO users (email, password, name) VALUES 
 ('admin@admin.com', '$2a$10$GRLdNijSQMUvl/au9ofL.eDwmoohzzS7.rmNSJZ.0FxO/BTk76klW', 'Admin');
-ON CONFLICT (email) DO NOTHING;
+
+-- Insert menu items - Antipasti
+INSERT INTO menu (titolo, ingredienti, img, categoria, prezzo, disponibile) VALUES 
+('Edamame', 'Fagioli di soia, sale', 'edamame.png', 'Antipasti', 4.5, true),
+...
 
 -- Insert menu items - Antipasti
 INSERT INTO menu (titolo, ingredienti, img, categoria, prezzo, disponibile) VALUES 
